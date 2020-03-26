@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './App.css';
+
 import firebase from './firebase.js';
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -13,14 +15,13 @@ class App extends Component {
     super();
     this.state = {
       currentItem: '',
+      spaceDescription: '',
       username: '',
       items: []
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
-  
-
   handleChange(e) {
     this.setState({
       [e.target.name]: e.target.value
@@ -31,24 +32,29 @@ class App extends Component {
     const itemsRef = firebase.database().ref('items');
     const item = {
       title: this.state.currentItem,
-      user: this.state.username
+      user: this.state.username,
+      spaceDescription: this.state.spaceDescription
     }
     itemsRef.push(item);
     this.setState({
       currentItem: '',
-      username: ''
+      username: '',
+      spaceDescription: ''
     });
   }
   componentDidMount() {
     const itemsRef = firebase.database().ref('items');
     itemsRef.on('value', (snapshot) => {
       let items = snapshot.val();
+      console.log(items)
       let newState = [];
       for (let item in items) {
+        console.log({item})
         newState.push({
           id: item,
           title: items[item].title,
-          user: items[item].user
+          user: items[item].user,
+          spaceDescription: items[item].spaceDescription
         });
       }
       this.setState({
@@ -73,11 +79,35 @@ class App extends Component {
         </Navbar>
         <div className='container'>
           <section className='add-item'>
-                <form onSubmit={this.handleSubmit}>
-                  <input type="text" name="username" placeholder="What's your name?" onChange={this.handleChange} value={this.state.username} />
-                  <input type="text" name="currentItem" placeholder="What are you bringing?" onChange={this.handleChange} value={this.state.currentItem} />
-                  <button>Add Item</button>
-                </form>
+            <form autocomplete="off" onSubmit={this.handleSubmit}>
+              <input
+                type="text"
+                name="username"
+                placeholder="Your Name"
+                onChange={this.handleChange}
+                value={this.state.username}
+              />
+              <br />
+              <input 
+                type="text"
+                name="currentItem"
+                placeholder="Space"
+                onChange={this.handleChange}
+                value={this.state.currentItem}
+              />
+              <br />
+              <label for='spaceDescription'>Test</label>
+              <textarea
+                id='spaceDescription'
+                name='spaceDescription'
+                cols='30'
+                rows='10'
+                placeholder="Please enter a description of your space"
+                onChange={this.handleChange}
+                value={this.state.spaceDescription}
+              ></textarea>
+              <button>Add Item</button>
+            </form>
           </section>
           <section className='display-item'>
               <div className="wrapper">
@@ -86,9 +116,9 @@ class App extends Component {
                     return (
                       <li key={item.id}>
                         <h3>{item.title}</h3>
-                        <p>brought by: {item.user}
-                          <button onClick={() => this.removeItem(item.id)}>Remove Item</button>
-                        </p>
+                        <p>brought by: {item.user}</p>
+                        <p>{item.spaceDescription}</p>
+                        <p><button onClick={() => this.removeItem(item.id)}>Remove Item</button></p>
                       </li>
                     )
                   })}
